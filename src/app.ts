@@ -1,11 +1,26 @@
-import express from 'express';
+import express, { NextFunction, Response } from 'express';
 import mongoose from 'mongoose';
+import userRouter from './routes/user';
+import cardRouter from './routes/card';
 
 const { PORT = 3000 } = process.env;
 
 const app = express();
 
+app.use(express.json());
+
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
+
+app.use((req: any, res: Response, next: NextFunction) => {
+  req.user = {
+    _id: '66059cf0d88b452a568026cd'
+  };
+
+  next();
+});
+
+app.use('/users', userRouter);
+app.use('/cards', cardRouter);
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
