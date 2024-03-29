@@ -20,3 +20,17 @@ export const deleteCard = (req: Request, res: Response) => {
     .then((card) => res.send({ data: card }))
     .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
 }
+
+export const likeCard = (req: any, res: Response) => {
+  const id = req.params.cardId;
+  return Card.findByIdAndUpdate(id, { $addToSet: { likes: req.user._id } }, { new: true })
+    .then((card) => res.send({ data: card }))
+    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+}
+
+export const dislikeCard = (req: any, res: Response) => {
+  const id = req.params.cardId;
+  return Card.findByIdAndUpdate(id, { $pull: { likes: req.user._id } }, { new: true })
+    .then((card) => res.send({ data: card }))
+    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+}

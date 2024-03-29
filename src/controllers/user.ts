@@ -20,3 +20,19 @@ export const createUser = (req: Request, res: Response) => {
     .then((user) => res.send({ data: user }))
     .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
 }
+
+export const updateUserInfo = (req: any, res: Response) => {
+  const { name, about } = req.body;
+  const id = req.user._id;
+  return User.findByIdAndUpdate(id, { name, about }, { new: true })
+    .then((user) => res.send({ data: user }))
+    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+}
+
+export const updateUserAvatar = (req: any, res: Response) => {
+  const { avatar } = req.body;
+  const id = req.user._id;
+  return User.findByIdAndUpdate(id, { avatar }, { new: true })
+    .then((user) => res.send({ data: user }))
+    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+}
