@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import Card, { ICard } from '../models/card';
-import { responseInternalError, responseValidationError } from '../utils/utils';
+import { responseValidationError } from '../utils/utils';
 import { CREATED, NOT_FOUND, SUCCESSFUL } from '../utils/constants';
 
 const responseCard = (res: Response, status: number = SUCCESSFUL) => (card: ICard | null) => {
@@ -13,7 +13,7 @@ const responseCard = (res: Response, status: number = SUCCESSFUL) => (card: ICar
 
 export const getCards = (req: Request, res: Response) => Card.find({})
   .then((cards) => res.send(cards))
-  .catch(responseInternalError(res));
+  .catch(responseValidationError(res));
 
 export const createCard = (req: any, res: Response) => {
   const { name, link } = req.body;
@@ -26,7 +26,7 @@ export const deleteCard = (req: any, res: Response) => {
   const id = req.params.cardId;
   return Card.findByIdAndDelete(id)
     .then(responseCard(res))
-    .catch(responseInternalError(res));
+    .catch(responseValidationError(res));
 };
 
 export const likeCard = (req: any, res: Response) => {
