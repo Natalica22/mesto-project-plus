@@ -6,13 +6,13 @@ const responseCard = (res: Response, status: number = 200) => (card: ICard | nul
   if (!card) {
     res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
   } else {
-    res.status(status).send({ data: card })
+    res.status(status).send(card)
   }
 }
 
 export const getCards = (req: Request, res: Response) => {
   return Card.find({})
-    .then(cards => res.send({ data: cards }))
+    .then(cards => res.send(cards))
     .catch(responseInternalError(res))
 }
 

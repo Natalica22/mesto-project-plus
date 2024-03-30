@@ -6,13 +6,13 @@ const responseUser = (res: Response, status: number = 200) => (user: IUser | nul
   if (!user) {
     res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
   } else {
-    res.status(status).send({ data: user })
+    res.status(status).send(user)
   }
 }
 
 export const getUsers = (req: Request, res: Response) => {
   return User.find({})
-    .then(users => res.send({ data: users }))
+    .then(users => res.send(users))
     .catch(responseInternalError(res));
 }
 
