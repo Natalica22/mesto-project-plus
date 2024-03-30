@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import Card, { ICard } from '../models/card';
 import { responseInternalError, responseValidationError } from './utils';
+import { CREATED, NOT_FOUND, SUCCESSFUL } from './constants';
 
-const responseCard = (res: Response, status: number = 200) => (card: ICard | null) => {
+const responseCard = (res: Response, status: number = SUCCESSFUL) => (card: ICard | null) => {
   if (!card) {
-    res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
+    res.status(NOT_FOUND).send({ message: 'Карточка с указанным _id не найдена' });
   } else {
     res.status(status).send(card)
   }
@@ -19,7 +20,7 @@ export const getCards = (req: Request, res: Response) => {
 export const createCard = (req: any, res: Response) => {
   const { name, link } = req.body;
   return Card.create({ name, link, owner: req.user._id })
-    .then(responseCard(res, 201))
+    .then(responseCard(res, CREATED))
     .catch(responseValidationError(res, 'Переданы некорректные данные при создании карточки'))
 }
 

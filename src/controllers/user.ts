@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import User, { IUser } from '../models/user';
 import { responseInternalError, responseValidationError } from './utils';
+import { CREATED, NOT_FOUND, SUCCESSFUL } from './constants';
 
-const responseUser = (res: Response, status: number = 200) => (user: IUser | null) => {
+const responseUser = (res: Response, status: number = SUCCESSFUL) => (user: IUser | null) => {
   if (!user) {
-    res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+    res.status(NOT_FOUND).send({ message: 'Пользователь по указанному _id не найден' });
   } else {
     res.status(status).send(user)
   }
@@ -26,7 +27,7 @@ export const getUser = (req: Request, res: Response) => {
 export const createUser = (req: Request, res: Response) => {
   const { name, about, avatar } = req.body;
   return User.create({ name, about, avatar })
-    .then(responseUser(res, 201))
+    .then(responseUser(res, CREATED))
     .catch(responseValidationError(res, 'Переданы некорректные данные при создании пользователя'));
 }
 
