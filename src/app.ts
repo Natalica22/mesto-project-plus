@@ -1,5 +1,7 @@
 import express, { NextFunction, Response, Request } from 'express';
 import mongoose from 'mongoose';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import helmet from 'helmet';
 import userRouter from './routes/user';
 import cardRouter from './routes/card';
 import { NOT_FOUND } from './utils/constants';
@@ -11,6 +13,8 @@ const app = express();
 app.use(express.json());
 
 mongoose.connect(DB_URL);
+
+app.use(helmet());
 
 app.use((req: any, res: Response, next: NextFunction) => {
   req.user = {
