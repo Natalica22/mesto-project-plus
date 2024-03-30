@@ -1,14 +1,14 @@
-import { Response } from "express";
-import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "./constants";
+import { Response } from 'express';
+import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from './constants';
 
-export const responseInternalError = (res: Response) => (err: Error) => {
+export const responseInternalError = (res: Response) => () => {
   res.status(INTERNAL_SERVER_ERROR).send({ message: 'Внутренняя ошибка сервера' });
-}
+};
 
 export const responseValidationError = (res: Response, validationError: String) => (err: Error) => {
   if (err.name.includes('ValidationError')) {
     res.status(BAD_REQUEST).send({ message: validationError });
   } else {
-    responseInternalError(res)(err);
+    responseInternalError(res)();
   }
-}
+};
