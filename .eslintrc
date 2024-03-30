@@ -45,6 +45,12 @@
         "js": "never",
         "ts": "never"
       }
+    ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": true
+      }
     ]
   },
 }

@@ -22,7 +22,7 @@ app.use((req: any, res: Response, next: NextFunction) => {
 
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
-app.use((req: Request, res: Response) => {
+app.use('*', (req: Request, res: Response) => {
   res.status(NOT_FOUND).send({ message: 'Запрашиваемый ресурс не найден' });
 });
 

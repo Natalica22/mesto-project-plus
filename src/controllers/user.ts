@@ -19,7 +19,7 @@ export const getUser = (req: Request, res: Response) => {
   const id = req.params.userId;
   return User.findById(id)
     .then(responseUser(res))
-    .catch(responseValidationError(res));
+    .catch(responseValidationError(res, 'Переданы некорректные данные пользователя'));
 };
 
 export const createUser = (req: Request, res: Response) => {
