@@ -24,7 +24,13 @@ export const createCard = (req: any, res: Response) => {
 
 export const deleteCard = (req: any, res: Response) => {
   const id = req.params.cardId;
-  return Card.findByIdAndDelete(id)
+  return Card.findById(id)
+    .then((card) => {
+      if (card && card.owner.toString() === req.user._id) {
+        return Card.findByIdAndDelete(id);
+      }
+      return Promise.reject(new Error('Нет прав удалить карточку'));
+    })
     .then(responseCard(res))
     .catch(responseValidationError(res, 'Переданны некорректные данные о карточке'));
 };
