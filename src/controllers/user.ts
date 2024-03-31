@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import bcrypt from 'bcryptjs';
 import User, { IUser } from '../models/user';
 import { responseInternalError, responseValidationError } from '../utils/utils';
 import { CREATED, NOT_FOUND, SUCCESSFUL } from '../utils/constants';
@@ -23,8 +25,13 @@ export const getUser = (req: Request, res: Response) => {
 };
 
 export const createUser = (req: Request, res: Response) => {
-  const { name, about, avatar } = req.body;
-  return User.create({ name, about, avatar })
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
     .then(responseUser(res, CREATED))
     .catch(responseValidationError(res, 'Переданы некорректные данные при создании пользователя'));
 };
