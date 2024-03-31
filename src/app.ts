@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import userRouter from './routes/user';
 import cardRouter from './routes/card';
 import { NOT_FOUND } from './utils/constants';
+import { createUser, login } from './controllers/user';
 
 const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 
@@ -23,6 +24,9 @@ app.use((req: any, res: Response, next: NextFunction) => {
 
   next();
 });
+
+app.post('/signin', login);
+app.post('/signup', createUser);
 
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
