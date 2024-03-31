@@ -40,6 +40,10 @@ export const createUser = (req: Request, res: Response) => {
     .catch(responseValidationError(res, 'Переданы некорректные данные при создании пользователя'));
 };
 
+export const getUserInfo = (req: any, res: Response) => User.findById({ _id: req.user?._id })
+  .then(responseUser(res))
+  .catch(responseValidationError(res, 'Переданы некорректные данные при запросе пользователя'));
+
 export const updateUserInfo = (req: any, res: Response) => {
   const { name, about } = req.body;
   const id = req.user._id;
