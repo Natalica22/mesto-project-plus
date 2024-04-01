@@ -1,34 +1,36 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import bcrypt from 'bcryptjs';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import jwt from 'jsonwebtoken';
+import UnauthorizedError from '../errors/unauthorized-error';
 import User, { IUser } from '../models/user';
-import { responseInternalError, responseValidationError } from '../utils/utils';
+import translateValidationError from '../utils/utils';
 import {
-  CREATED, JWT_SECRET_KEY, NOT_FOUND, SUCCESSFUL, UNAUTHORIZED,
+  CREATED, JWT_SECRET_KEY, SUCCESSFUL,
 } from '../utils/constants';
+import NotFoundError from '../errors/not-found-error';
 
 const responseUser = (res: Response, status: number = SUCCESSFUL) => (user: IUser | null) => {
   if (!user) {
-    res.status(NOT_FOUND).send({ message: 'Пользователь по указанному _id не найден' });
+    throw new NotFoundError('Пользователь по указанному _id не найден');
   } else {
     res.status(status).send(user);
   }
 };
 
-export const getUsers = (req: Request, res: Response) => User.find({})
+export const getUsers = (req: Request, res: Response, next: NextFunction) => User.find({})
   .then((users) => res.send(users))
-  .catch(responseInternalError(res));
+  .catch(next);
 
-export const getUser = (req: Request, res: Response) => {
+export const getUser = (req: Request, res: Response, next: NextFunction) => {
   const id = req.params.userId;
   return User.findById(id)
     .then(responseUser(res))
-    .catch(responseValidationError(res, 'Переданы некорректные данные пользователя'));
+    .catch(translateValidationError(next, 'Переданы некорректные данные пользователя'));
 };
 
-export const createUser = (req: Request, res: Response) => {
+export const createUser = (req: Request, res: Response, next: NextFunction) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -37,41 +39,43 @@ export const createUser = (req: Request, res: Response) => {
       name, about, avatar, email, password: hash,
     }))
     .then(responseUser(res, CREATED))
-    .catch(responseValidationError(res, 'Переданы некорректные данные при создании пользователя'));
+    .catch(translateValidationError(next, 'Переданы некорректные данные при создании пользователя', 'Пользователь с таким email уже существует'));
 };
 
-export const getUserInfo = (req: any, res: Response) => User.findById({ _id: req.user?._id })
-  .then(responseUser(res))
-  .catch(responseValidationError(res, 'Переданы некорректные данные при запросе пользователя'));
+export const getUserInfo = (req: any, res: Response, next: NextFunction) => {
+  User.findById({ _id: req.user?._id })
+    .then(responseUser(res))
+    .catch(translateValidationError(next, 'Переданы некорректные данные при запросе пользователя'));
+};
 
-export const updateUserInfo = (req: any, res: Response) => {
+export const updateUserInfo = (req: any, res: Response, next: NextFunction) => {
   const { name, about } = req.body;
   const id = req.user._id;
   return User.findByIdAndUpdate(id, { name, about }, { new: true, runValidators: true })
     .then(responseUser(res))
-    .catch(responseValidationError(res, 'Переданы некорректные данные при обновлении профиля'));
+    .catch(translateValidationError(next, 'Переданы некорректные данные при обновлении профиля'));
 };
 
-export const updateUserAvatar = (req: any, res: Response) => {
+export const updateUserAvatar = (req: any, res: Response, next: NextFunction) => {
   const { avatar } = req.body;
   const id = req.user._id;
   return User.findByIdAndUpdate(id, { avatar }, { new: true, runValidators: true })
     .then(responseUser(res))
-    .catch(responseValidationError(res, 'Переданы некорректные данные при обновлении аватара'));
+    .catch(translateValidationError(next, 'Переданы некорректные данные при обновлении аватара'));
 };
 
-export const login = (req: Request, res: Response) => {
+export const login = (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
   return User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        return Promise.reject(new UnauthorizedError('Неправильные почта или пароль'));
       }
 
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            return Promise.reject(new Error('Неправильные почта или пароль'));
+            return Promise.reject(new UnauthorizedError('Неправильные почта или пароль'));
           }
 
           const token = jwt.sign({ _id: user._id }, JWT_SECRET_KEY, { expiresIn: '7d' });
@@ -79,9 +83,5 @@ export const login = (req: Request, res: Response) => {
           return res.send();
         });
     })
-    .catch((err) => {
-      res
-        .status(UNAUTHORIZED)
-        .send({ message: err.message });
-    });
+    .catch(next);
 };

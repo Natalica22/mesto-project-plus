@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import { JWT_SECRET_KEY, UNAUTHORIZED } from '../utils/constants';
+import { JWT_SECRET_KEY } from '../utils/constants';
+import UnauthorizedError from '../errors/unauthorized-error';
 
 interface IAuthRequest extends Request {
   user?: string | JwtPayload;
@@ -11,7 +12,7 @@ export default (req: IAuthRequest, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    return res.status(UNAUTHORIZED).send({ message: 'Необходима авторизация' });
+    throw new UnauthorizedError('Необходима авторизация');
   }
 
   const token = authorization.replace('Bearer ', '');
@@ -20,7 +21,7 @@ export default (req: IAuthRequest, res: Response, next: NextFunction) => {
   try {
     payload = jwt.verify(token, JWT_SECRET_KEY);
   } catch (err) {
-    return res.status(UNAUTHORIZED).send({ message: 'Необходима авторизация' });
+    throw new UnauthorizedError('Необходима авторизация');
   }
 
   req.user = payload;

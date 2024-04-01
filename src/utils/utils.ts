@@ -1,16 +1,19 @@
-import { Response } from 'express';
-import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from './constants';
+import { NextFunction } from 'express';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { MongoServerError } from 'mongodb';
+import ConflictError from '../errors/conflict-error';
+import BadRequestError from '../errors/bad-request-error';
 
-export const responseInternalError = (res: Response) => () => {
-  res.status(INTERNAL_SERVER_ERROR).send({ message: 'Внутренняя ошибка сервера' });
-};
-
-export const responseValidationError = (res: Response, validationError: String) => (err: Error) => {
+const translateValidationError = (next: NextFunction, validationError: string, confilctError: string = '') => (err: Error) => {
   if (err.name.includes('ValidationError')) {
-    res.status(BAD_REQUEST).send({ message: `${validationError}. ${err.message}` });
+    next(new BadRequestError(`${validationError}. ${err.message}`));
   } else if (err.name.includes('CastError')) {
-    res.status(BAD_REQUEST).send({ message: validationError });
+    next(new BadRequestError(validationError));
+  } else if (err instanceof MongoServerError && err.code === 11000) {
+    next(new ConflictError(confilctError));
   } else {
-    responseInternalError(res)();
+    next(err);
   }
 };
+
+export default translateValidationError;

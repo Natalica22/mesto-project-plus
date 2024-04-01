@@ -5,9 +5,10 @@ import helmet from 'helmet';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import userRouter from './routes/user';
 import cardRouter from './routes/card';
-import { NOT_FOUND } from './utils/constants';
+import { NOT_FOUND } from './errors/constants';
 import { createUser, login } from './controllers/user';
 import auth from './middlewares/auth';
+import errorHandler from './middlewares/errors';
 
 const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 
@@ -33,6 +34,8 @@ app.use('*', (req: Request, res: Response) => {
 });
 
 app.use(errorLogger);
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);

@@ -1,41 +1,43 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import Card, { ICard } from '../models/card';
-import { responseInternalError, responseValidationError } from '../utils/utils';
-import { CREATED, NOT_FOUND, SUCCESSFUL } from '../utils/constants';
+import translateValidationError from '../utils/utils';
+import { CREATED, SUCCESSFUL } from '../utils/constants';
+import NotFoundError from '../errors/not-found-error';
+import ForbiddenError from '../errors/forbidden -error';
 
 const responseCard = (res: Response, status: number = SUCCESSFUL) => (card: ICard | null) => {
   if (!card) {
-    res.status(NOT_FOUND).send({ message: 'Карточка с указанным _id не найдена' });
+    throw new NotFoundError('Карточка с указанным _id не найдена');
   } else {
     res.status(status).send(card);
   }
 };
 
-export const getCards = (req: Request, res: Response) => Card.find({})
+export const getCards = (req: Request, res: Response, next: NextFunction) => Card.find({})
   .then((cards) => res.send(cards))
-  .catch(responseInternalError(res));
+  .catch(next);
 
-export const createCard = (req: any, res: Response) => {
+export const createCard = (req: any, res: Response, next: NextFunction) => {
   const { name, link } = req.body;
   return Card.create({ name, link, owner: req.user._id })
     .then(responseCard(res, CREATED))
-    .catch(responseValidationError(res, 'Переданы некорректные данные при создании карточки'));
+    .catch(translateValidationError(next, 'Переданы некорректные данные при создании карточки'));
 };
 
-export const deleteCard = (req: any, res: Response) => {
+export const deleteCard = (req: any, res: Response, next: NextFunction) => {
   const id = req.params.cardId;
   return Card.findById(id)
     .then((card) => {
       if (card && card.owner.toString() === req.user._id) {
         return Card.findByIdAndDelete(id);
       }
-      return Promise.reject(new Error('Нет прав удалить карточку'));
+      return Promise.reject(new ForbiddenError('Нет прав удалить карточку'));
     })
     .then(responseCard(res))
-    .catch(responseValidationError(res, 'Переданны некорректные данные о карточке'));
+    .catch(translateValidationError(next, 'Переданны некорректные данные о карточке'));
 };
 
-export const likeCard = (req: any, res: Response) => {
+export const likeCard = (req: any, res: Response, next: NextFunction) => {
   const id = req.params.cardId;
   return Card.findByIdAndUpdate(
     id,
@@ -43,10 +45,10 @@ export const likeCard = (req: any, res: Response) => {
     { new: true, runValidators: true },
   )
     .then(responseCard(res))
-    .catch(responseValidationError(res, 'Переданы некорректные данные для постановки/снятии лайка'));
+    .catch(translateValidationError(next, 'Переданы некорректные данные для постановки/снятии лайка'));
 };
 
-export const dislikeCard = (req: any, res: Response) => {
+export const dislikeCard = (req: any, res: Response, next: NextFunction) => {
   const id = req.params.cardId;
   return Card.findByIdAndUpdate(
     id,
@@ -54,5 +56,5 @@ export const dislikeCard = (req: any, res: Response) => {
     { new: true, runValidators: true },
   )
     .then(responseCard(res))
-    .catch(responseValidationError(res, 'Переданы некорректные данные для постановки/снятии лайка'));
+    .catch(translateValidationError(next, 'Переданы некорректные данные для постановки/снятии лайка'));
 };
