@@ -7,7 +7,7 @@ import UnauthorizedError from '../errors/unauthorized-error';
 import User, { IUser } from '../models/user';
 import translateValidationError from '../utils/utils';
 import {
-  CREATED, JWT_SECRET_KEY, SUCCESSFUL,
+  CREATED, JWT_TOKEN_COOKIE, JWT_SECRET_KEY, SUCCESSFUL,
 } from '../utils/constants';
 import NotFoundError from '../errors/not-found-error';
 
@@ -79,7 +79,7 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
           }
 
           const token = jwt.sign({ _id: user._id }, JWT_SECRET_KEY, { expiresIn: '7d' });
-          res.cookie('JWT_TOKEN', token, { httpOnly: true });
+          res.cookie(JWT_TOKEN_COOKIE, token, { httpOnly: true });
           return res.send();
         });
     })

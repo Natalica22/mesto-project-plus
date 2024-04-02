@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import { JWT_SECRET_KEY } from '../utils/constants';
+import { JWT_TOKEN_COOKIE, JWT_SECRET_KEY } from '../utils/constants';
 import UnauthorizedError from '../errors/unauthorized-error';
 
 interface IAuthRequest extends Request {
@@ -9,13 +9,7 @@ interface IAuthRequest extends Request {
 }
 
 export default (req: IAuthRequest, res: Response, next: NextFunction) => {
-  const { authorization } = req.headers;
-
-  if (!authorization || !authorization.startsWith('Bearer ')) {
-    throw new UnauthorizedError('Необходима авторизация');
-  }
-
-  const token = authorization.replace('Bearer ', '');
+  const token = req.cookies[JWT_TOKEN_COOKIE];
   let payload;
 
   try {

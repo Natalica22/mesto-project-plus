@@ -2,6 +2,8 @@ import express, { Response, Request } from 'express';
 import mongoose from 'mongoose';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import helmet from 'helmet';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import cookieParser from 'cookie-parser';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import userRouter from './routes/user';
 import cardRouter from './routes/card';
@@ -19,6 +21,7 @@ app.use(express.json());
 mongoose.connect(DB_URL);
 
 app.use(helmet());
+app.use(cookieParser());
 
 app.use(requestLogger);
 
