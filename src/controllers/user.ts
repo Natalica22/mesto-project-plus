@@ -10,6 +10,7 @@ import {
   CREATED, JWT_TOKEN_COOKIE, JWT_SECRET_KEY, SUCCESSFUL,
 } from '../utils/constants';
 import NotFoundError from '../errors/not-found-error';
+import { IAuthRequest } from '../middlewares/auth';
 
 const responseUser = (res: Response, status: number = SUCCESSFUL) => (user: IUser | null) => {
   if (!user) {
@@ -42,23 +43,23 @@ export const createUser = (req: Request, res: Response, next: NextFunction) => {
     .catch(translateValidationError(next, 'Переданы некорректные данные при создании пользователя', 'Пользователь с таким email уже существует'));
 };
 
-export const getUserInfo = (req: any, res: Response, next: NextFunction) => {
+export const getUserInfo = (req: IAuthRequest, res: Response, next: NextFunction) => {
   User.findById({ _id: req.user?._id })
     .then(responseUser(res))
     .catch(translateValidationError(next, 'Переданы некорректные данные при запросе пользователя'));
 };
 
-export const updateUserInfo = (req: any, res: Response, next: NextFunction) => {
+export const updateUserInfo = (req: IAuthRequest, res: Response, next: NextFunction) => {
   const { name, about } = req.body;
-  const id = req.user._id;
+  const id = req.user?._id;
   return User.findByIdAndUpdate(id, { name, about }, { new: true, runValidators: true })
     .then(responseUser(res))
     .catch(translateValidationError(next, 'Переданы некорректные данные при обновлении профиля'));
 };
 
-export const updateUserAvatar = (req: any, res: Response, next: NextFunction) => {
+export const updateUserAvatar = (req: IAuthRequest, res: Response, next: NextFunction) => {
   const { avatar } = req.body;
-  const id = req.user._id;
+  const id = req.user?._id;
   return User.findByIdAndUpdate(id, { avatar }, { new: true, runValidators: true })
     .then(responseUser(res))
     .catch(translateValidationError(next, 'Переданы некорректные данные при обновлении аватара'));

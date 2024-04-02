@@ -4,6 +4,7 @@ import translateValidationError from '../utils/utils';
 import { CREATED, SUCCESSFUL } from '../utils/constants';
 import NotFoundError from '../errors/not-found-error';
 import ForbiddenError from '../errors/forbidden -error';
+import { IAuthRequest } from '../middlewares/auth';
 
 const responseCard = (res: Response, status: number = SUCCESSFUL) => (card: ICard | null) => {
   if (!card) {
@@ -17,18 +18,18 @@ export const getCards = (req: Request, res: Response, next: NextFunction) => Car
   .then((cards) => res.send(cards))
   .catch(next);
 
-export const createCard = (req: any, res: Response, next: NextFunction) => {
+export const createCard = (req: IAuthRequest, res: Response, next: NextFunction) => {
   const { name, link } = req.body;
-  return Card.create({ name, link, owner: req.user._id })
+  return Card.create({ name, link, owner: req.user?._id })
     .then(responseCard(res, CREATED))
     .catch(translateValidationError(next, 'Переданы некорректные данные при создании карточки'));
 };
 
-export const deleteCard = (req: any, res: Response, next: NextFunction) => {
+export const deleteCard = (req: IAuthRequest, res: Response, next: NextFunction) => {
   const id = req.params.cardId;
   return Card.findById(id)
     .then((card) => {
-      if (card && card.owner.toString() === req.user._id) {
+      if (card && card.owner.toString() === req.user?._id) {
         return Card.findByIdAndDelete(id);
       }
       return Promise.reject(new ForbiddenError('Нет прав удалить карточку'));
@@ -37,22 +38,22 @@ export const deleteCard = (req: any, res: Response, next: NextFunction) => {
     .catch(translateValidationError(next, 'Переданны некорректные данные о карточке'));
 };
 
-export const likeCard = (req: any, res: Response, next: NextFunction) => {
+export const likeCard = (req: IAuthRequest, res: Response, next: NextFunction) => {
   const id = req.params.cardId;
   return Card.findByIdAndUpdate(
     id,
-    { $addToSet: { likes: req.user._id } },
+    { $addToSet: { likes: req.user?._id } },
     { new: true, runValidators: true },
   )
     .then(responseCard(res))
     .catch(translateValidationError(next, 'Переданы некорректные данные для постановки/снятии лайка'));
 };
 
-export const dislikeCard = (req: any, res: Response, next: NextFunction) => {
+export const dislikeCard = (req: IAuthRequest, res: Response, next: NextFunction) => {
   const id = req.params.cardId;
   return Card.findByIdAndUpdate(
     id,
-    { $pull: { likes: req.user._id } },
+    { $pull: { likes: req.user?._id } },
     { new: true, runValidators: true },
   )
     .then(responseCard(res))

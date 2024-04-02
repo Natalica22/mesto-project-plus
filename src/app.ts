@@ -4,13 +4,16 @@ import mongoose from 'mongoose';
 import helmet from 'helmet';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import cookieParser from 'cookie-parser';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { errors } from 'celebrate';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import userRouter from './routes/user';
 import cardRouter from './routes/card';
 import { NOT_FOUND } from './errors/constants';
 import { createUser, login } from './controllers/user';
-import auth from './middlewares/auth';
+import { authHandler } from './middlewares/auth';
 import errorHandler from './middlewares/errors';
+import { validateCreateUser, validateLogin } from './validation/user';
 
 const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 
@@ -25,10 +28,10 @@ app.use(cookieParser());
 
 app.use(requestLogger);
 
-app.post('/signin', login);
-app.post('/signup', createUser);
+app.post('/signin', validateLogin, login);
+app.post('/signup', validateCreateUser, createUser);
 
-app.use(auth);
+app.use(authHandler);
 
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
@@ -37,7 +40,7 @@ app.use('*', (req: Request, res: Response) => {
 });
 
 app.use(errorLogger);
-
+app.use(errors());
 app.use(errorHandler);
 
 app.listen(PORT, () => {
