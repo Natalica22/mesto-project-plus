@@ -27,13 +27,13 @@ export const validateGetUser = celebrate({
 
 export const validateUpdateUserInfo = celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(200),
+    name: Joi.string().required().min(2).max(30),
+    about: Joi.string().required().min(2).max(200),
   }),
 });
 
 export const validateUpdateUserAvatar = celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().pattern(LINK_REGEXP),
+    avatar: Joi.string().required().pattern(LINK_REGEXP),
   }),
 });
