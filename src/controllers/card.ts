@@ -30,7 +30,7 @@ export const deleteCard = (req: IAuthRequest, res: Response, next: NextFunction)
   return Card.findById(id)
     .then((card) => {
       if (card && card.owner.toString() === req.user?._id) {
-        return Card.findByIdAndDelete(id);
+        return card.deleteOne();
       }
       return Promise.reject(new ForbiddenError('Нет прав удалить карточку'));
     })
