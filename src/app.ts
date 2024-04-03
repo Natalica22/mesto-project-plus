@@ -1,4 +1,4 @@
-import express, { Response, Request, NextFunction } from 'express';
+import express from 'express';
 import mongoose from 'mongoose';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import helmet from 'helmet';
@@ -7,14 +7,9 @@ import cookieParser from 'cookie-parser';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { errors } from 'celebrate';
 import { requestLogger, errorLogger } from './middlewares/logger';
-import userRouter from './routes/user';
-import cardRouter from './routes/card';
-import { createUser, login } from './controllers/user';
-import { authHandler } from './middlewares/auth';
 import errorHandler from './middlewares/errors';
-import { validateCreateUser, validateLogin } from './validation/user';
-import NotFoundError from './errors/not-found-error';
 import { DB_URL, PORT } from './config';
+import router from './routes';
 
 const app = express();
 
@@ -27,16 +22,7 @@ app.use(cookieParser());
 
 app.use(requestLogger);
 
-app.post('/signin', validateLogin, login);
-app.post('/signup', validateCreateUser, createUser);
-
-app.use(authHandler);
-
-app.use('/users', userRouter);
-app.use('/cards', cardRouter);
-app.use('*', (req: Request, res: Response, next: NextFunction) => {
-  next(new NotFoundError('Запрашиваемый ресурс не найден'));
-});
+app.use(router);
 
 app.use(errorLogger);
 app.use(errors());
