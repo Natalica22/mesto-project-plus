@@ -12,6 +12,15 @@ import {
 import NotFoundError from '../errors/not-found-error';
 import { IAuthRequest } from '../middlewares/auth';
 
+interface INameAbout {
+  name: string;
+  about: string;
+}
+
+interface IAvatar {
+  avatar: string;
+}
+
 const responseUser = (res: Response, status: number = SUCCESSFUL) => (user: IUser | null) => {
   if (!user) {
     throw new NotFoundError('Пользователь по указанному _id не найден');
@@ -20,15 +29,32 @@ const responseUser = (res: Response, status: number = SUCCESSFUL) => (user: IUse
   }
 };
 
+const findUser = (id: any, res: Response, next: NextFunction, err: string) => {
+  User.findById(id)
+    .then(responseUser(res))
+    .catch(translateValidationError(next, err));
+};
+
+const updateUser = (
+  req: IAuthRequest,
+  res: Response,
+  next: NextFunction,
+  err: string,
+  data: INameAbout | IAvatar,
+) => {
+  const id = req.user?._id;
+  return User.findByIdAndUpdate(id, data, { new: true, runValidators: true })
+    .then(responseUser(res))
+    .catch(translateValidationError(next, err));
+};
+
 export const getUsers = (req: Request, res: Response, next: NextFunction) => User.find({})
   .then((users) => res.send(users))
   .catch(next);
 
 export const getUser = (req: Request, res: Response, next: NextFunction) => {
   const id = req.params.userId;
-  return User.findById(id)
-    .then(responseUser(res))
-    .catch(translateValidationError(next, 'Переданы некорректные данные пользователя'));
+  return findUser(id, res, next, 'Переданы некорректные данные пользователя');
 };
 
 export const createUser = (req: Request, res: Response, next: NextFunction) => {
@@ -43,26 +69,16 @@ export const createUser = (req: Request, res: Response, next: NextFunction) => {
     .catch(translateValidationError(next, 'Переданы некорректные данные при создании пользователя', 'Пользователь с таким email уже существует'));
 };
 
-export const getUserInfo = (req: IAuthRequest, res: Response, next: NextFunction) => {
-  User.findById({ _id: req.user?._id })
-    .then(responseUser(res))
-    .catch(translateValidationError(next, 'Переданы некорректные данные при запросе пользователя'));
-};
+export const getUserInfo = (req: IAuthRequest, res: Response, next: NextFunction) => findUser(req.user?._id, res, next, 'Переданы некорректные данные при запросе пользователя');
 
 export const updateUserInfo = (req: IAuthRequest, res: Response, next: NextFunction) => {
   const { name, about } = req.body;
-  const id = req.user?._id;
-  return User.findByIdAndUpdate(id, { name, about }, { new: true, runValidators: true })
-    .then(responseUser(res))
-    .catch(translateValidationError(next, 'Переданы некорректные данные при обновлении профиля'));
+  return updateUser(req, res, next, 'Переданы некорректные данные при обновлении профиля', { name, about });
 };
 
 export const updateUserAvatar = (req: IAuthRequest, res: Response, next: NextFunction) => {
   const { avatar } = req.body;
-  const id = req.user?._id;
-  return User.findByIdAndUpdate(id, { avatar }, { new: true, runValidators: true })
-    .then(responseUser(res))
-    .catch(translateValidationError(next, 'Переданы некорректные данные при обновлении аватара'));
+  return updateUser(req, res, next, 'Переданы некорректные данные при обновлении аватара', { avatar });
 };
 
 export const login = (req: Request, res: Response, next: NextFunction) => {
